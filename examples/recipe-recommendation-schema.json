@@ -1,0 +1,223 @@
+{
+  "domain": "recipe_recommendation",
+  "lineage_id": "recipe_hsl",
+  "schema_version": "v1.5",
+  "created": "2025-11-21",
+  "description": "Dietary preference encoding for personalized recipe recommendations. Uses HSL colorspace where hue represents cuisine category, saturation represents flavor intensity, and lightness represents dietary constraints.",
+  "schema_hash": "sha256-a1b2c3d4e5f67890abcdef1234567890fedcba9876543210cafe1234567890ab",
+
+  "transform": {
+    "colorspace": "hsl",
+    "reference_white": "D65",
+    "gamma": "sRGB",
+    "clipping_policy": "hard_clip",
+    "hue_wrap": true,
+    "notes": "HSL provides categorical hue (cuisine type) with intensity (saturation) and constraint (lightness) axes. Hue wraps at 360°."
+  },
+
+  "dimensions": {
+    "H": {
+      "param": "cuisine_category",
+      "label": "Cuisine Category",
+      "range": [0, 360],
+      "unit": "degrees",
+      "description": "Primary cuisine style mapped to hue wheel (wraps at 360°)",
+      "interpretation": "Red (0°): Mediterranean/Italian. Orange (30°): Latin/Mexican. Yellow (60°): Asian. Green (120°): Fresh/Salads. Blue (240°): Seafood/Coastal. Purple (300°): Fusion/Creative.",
+      "categorical_mapping": {
+        "0-30": "Mediterranean/Italian",
+        "30-60": "Latin/Mexican/Spicy",
+        "60-120": "Asian/East Asian",
+        "120-180": "Fresh/Vegetarian/Salads",
+        "180-240": "Comfort/Hearty/American",
+        "240-300": "Seafood/Coastal",
+        "300-360": "Fusion/Creative/Modern"
+      }
+    },
+    "S": {
+      "param": "flavor_intensity",
+      "label": "Flavor Intensity",
+      "range": [0, 100],
+      "unit": "percent",
+      "description": "Boldness of flavors from subtle (0%) to intense (100%)",
+      "interpretation": "Low saturation: mild, delicate, subtle flavors. High saturation: bold, spicy, intense, complex flavors."
+    },
+    "L": {
+      "param": "dietary_constraint",
+      "label": "Dietary Constraint Level",
+      "range": [0, 100],
+      "unit": "percent",
+      "description": "Dietary flexibility from restrictive (low) to permissive (high)",
+      "interpretation": "Low lightness (dark): strict dietary restrictions (vegan, allergen-free, medical diet). High lightness (light): flexible, few restrictions, adventurous eating."
+    }
+  },
+
+  "anchors": [
+    {
+      "id": "italian_moderate",
+      "label": "Classic Italian (Moderate)",
+      "description": "Traditional Italian cuisine with moderate flavors and some flexibility",
+      "latent": "#CC6644",
+      "decoded_hsl": {
+        "H": 15,
+        "S": 60,
+        "L": 53
+      },
+      "semantic_context": "Pasta, tomato-based sauces, olive oil, balanced flavors"
+    },
+    {
+      "id": "mexican_bold",
+      "label": "Bold Mexican/Latin",
+      "description": "Spicy Latin cuisine with intense flavors",
+      "latent": "#FF4400",
+      "decoded_hsl": {
+        "H": 16,
+        "S": 100,
+        "L": 50
+      },
+      "semantic_context": "Chili peppers, cumin, bold spices, vibrant flavors"
+    },
+    {
+      "id": "asian_umami",
+      "label": "Asian Umami-Rich",
+      "description": "East Asian cuisine with complex savory flavors",
+      "latent": "#CCAA33",
+      "decoded_hsl": {
+        "H": 45,
+        "S": 60,
+        "L": 50
+      },
+      "semantic_context": "Soy sauce, ginger, garlic, fermented flavors, stir-fry"
+    },
+    {
+      "id": "fresh_veggie",
+      "label": "Fresh Vegetarian",
+      "description": "Light, fresh, vegetable-forward with subtle flavors",
+      "latent": "#77DD77",
+      "decoded_hsl": {
+        "H": 120,
+        "S": 60,
+        "L": 67
+      },
+      "semantic_context": "Salads, raw vegetables, light dressings, fresh herbs"
+    },
+    {
+      "id": "vegan_restricted",
+      "label": "Vegan/Highly Restricted",
+      "description": "Strict dietary constraints, plant-based",
+      "latent": "#336633",
+      "decoded_hsl": {
+        "H": 120,
+        "S": 33,
+        "L": 30
+      },
+      "semantic_context": "No animal products, allergen-conscious, whole foods"
+    },
+    {
+      "id": "comfort_hearty",
+      "label": "Comfort Food/Hearty",
+      "description": "Rich, satisfying, traditional comfort foods",
+      "latent": "#8B7355",
+      "decoded_hsl": {
+        "H": 30,
+        "S": 25,
+        "L": 44
+      },
+      "semantic_context": "Casseroles, roasts, rich sauces, filling portions"
+    },
+    {
+      "id": "seafood_coastal",
+      "label": "Seafood/Coastal",
+      "description": "Fresh seafood with clean, oceanic flavors",
+      "latent": "#4488CC",
+      "decoded_hsl": {
+        "H": 210,
+        "S": 50,
+        "L": 53
+      },
+      "semantic_context": "Fish, shellfish, light preparations, citrus accents"
+    }
+  ],
+
+  "quality_config": {
+    "min_confidence": 0.70,
+    "warning_threshold": 0.60,
+    "notes": "Lower thresholds than medical domain - recommendations can tolerate more uncertainty"
+  },
+
+  "confidence_factors": {
+    "transform_quality_weight": 0.25,
+    "schema_coverage_weight": 0.35,
+    "anchor_proximity_weight": 0.40,
+    "notes": "Higher weight on anchor proximity for categorical hue interpretation"
+  },
+
+  "audit_mode": false,
+  "compliance_notes": "Recommendation system - does not require strict audit trails. Consider enabling for A/B testing.",
+
+  "usage_guidelines": {
+    "target_use_cases": [
+      "Personalized recipe recommendations",
+      "Meal planning systems",
+      "Restaurant menu customization",
+      "Grocery shopping suggestions",
+      "Cooking class matching"
+    ],
+    "not_suitable_for": [
+      "Medical dietary requirements (use specialized medical schemas)",
+      "Allergen management (requires explicit binary flags)",
+      "Nutritional calculations (use structured data)"
+    ],
+    "integration_notes": "Combine with explicit allergen flags and nutritional constraints. VRGB captures preference style, not safety requirements."
+  },
+
+  "special_features": {
+    "hue_interpolation": "circular",
+    "hue_distance_metric": "shortest_path_on_circle",
+    "notes": "Hue wraps at 360° - distance from 350° to 10° is 20°, not 340°"
+  },
+
+  "example_interpretations": [
+    {
+      "latent": "#FF4400",
+      "cuisine_category": "Latin/Mexican",
+      "flavor_intensity": 95,
+      "dietary_constraint": 60,
+      "description": "Bold, spicy Latin cuisine with moderate flexibility"
+    },
+    {
+      "latent": "#77DD77",
+      "cuisine_category": "Fresh/Vegetarian",
+      "flavor_intensity": 65,
+      "dietary_constraint": 85,
+      "description": "Light vegetable-forward dishes with flexible dietary approach"
+    },
+    {
+      "latent": "#336633",
+      "cuisine_category": "Fresh/Vegetarian",
+      "flavor_intensity": 40,
+      "dietary_constraint": 25,
+      "description": "Strict vegan/plant-based with subtle flavors"
+    }
+  ],
+
+  "version_history": [
+    {
+      "version": "v1.0",
+      "date": "2024-05-20",
+      "changes": "Initial schema with 4 anchors, basic hue mapping"
+    },
+    {
+      "version": "v1.5",
+      "date": "2025-11-21",
+      "changes": "Expanded to 7 anchors, refined hue→cuisine mapping, added dietary constraint axis"
+    }
+  ],
+
+  "metadata": {
+    "author": "Nicholas Cottrell",
+    "organization": "VRGB Research",
+    "domain_experts_consulted": ["Nutritionists", "Recipe platform designers"],
+    "validation_status": "Example schema - illustrative purposes",
+    "license": "Apache-2.0"
+  }
+}

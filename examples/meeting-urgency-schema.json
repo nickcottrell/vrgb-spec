@@ -1,0 +1,241 @@
+{
+  "domain": "meeting_urgency",
+  "lineage_id": "meeting_lab",
+  "schema_version": "v2.2",
+  "created": "2025-11-21",
+  "description": "Meeting prioritization and calendar scheduling preferences. Uses LAB colorspace for perceptually uniform urgency and priority metrics.",
+  "schema_hash": "sha256-9876543210fedcba0123456789abcdef1234567890cafe1234567890a1b2c3d4",
+
+  "transform": {
+    "colorspace": "lab",
+    "reference_white": "D65",
+    "adaptation": "Bradford",
+    "gamma": "sRGB",
+    "clipping_policy": "perceptual_clamp",
+    "notes": "LAB provides perceptually uniform distances for priority/urgency metrics in meeting scheduling"
+  },
+
+  "dimensions": {
+    "L": {
+      "param": "priority_level",
+      "label": "Meeting Priority",
+      "range": [0, 100],
+      "description": "Overall importance from low-priority (0) to critical (100)",
+      "interpretation": "Higher values indicate meetings that should take precedence in scheduling conflicts"
+    },
+    "a": {
+      "param": "urgency_score",
+      "label": "Time Sensitivity",
+      "range": [-128, 127],
+      "description": "Time-sensitivity axis from flexible scheduling (negative) to immediate/time-critical (positive)",
+      "interpretation": "Negative: can be rescheduled, flexible timing. Positive: fixed deadline, time-sensitive."
+    },
+    "b": {
+      "param": "collaboration_scope",
+      "label": "Collaboration Scope",
+      "range": [-128, 127],
+      "description": "Individual/focused work (negative) vs team/cross-functional collaboration (positive)",
+      "interpretation": "Negative: individual meetings, 1:1s, focused work. Positive: large groups, cross-team, broad stakeholders."
+    }
+  },
+
+  "anchors": [
+    {
+      "id": "routine_checkin",
+      "label": "Routine Team Check-in",
+      "description": "Regular recurring meeting, low urgency, flexible scheduling",
+      "latent": "#808080",
+      "decoded_lab": {
+        "L": 53.4,
+        "a": 0.0,
+        "b": 0.0
+      },
+      "semantic_context": "Weekly sync, standup, routine status update"
+    },
+    {
+      "id": "planning_session",
+      "label": "Planning/Strategy Session",
+      "description": "Important but not urgent, collaborative, requires dedicated time",
+      "latent": "#6699CC",
+      "decoded_lab": {
+        "L": 62.0,
+        "a": -8.0,
+        "b": -30.0
+      },
+      "semantic_context": "Quarterly planning, roadmap review, strategic discussion"
+    },
+    {
+      "id": "one_on_one",
+      "label": "1:1 Meeting",
+      "description": "Individual meeting, moderate priority, flexible timing",
+      "latent": "#99AA88",
+      "decoded_lab": {
+        "L": 66.0,
+        "a": -10.0,
+        "b": 12.0
+      },
+      "semantic_context": "Manager 1:1, mentoring session, individual feedback"
+    },
+    {
+      "id": "deadline_review",
+      "label": "Deadline-Driven Review",
+      "description": "Time-sensitive deliverable review before deadline",
+      "latent": "#DDAA33",
+      "decoded_lab": {
+        "L": 72.0,
+        "a": 10.0,
+        "b": 65.0
+      },
+      "semantic_context": "Pre-launch review, release approval, time-boxed decision"
+    },
+    {
+      "id": "urgent_decision",
+      "label": "Urgent Decision Meeting",
+      "description": "High priority, time-critical, requires immediate action",
+      "latent": "#FF5522",
+      "decoded_lab": {
+        "L": 60.0,
+        "a": 65.0,
+        "b": 55.0
+      },
+      "semantic_context": "Production incident, customer escalation, urgent approval needed"
+    },
+    {
+      "id": "crisis_response",
+      "label": "Crisis/Emergency Response",
+      "description": "Critical priority, immediate action required, all-hands mobilization",
+      "latent": "#FF0000",
+      "decoded_lab": {
+        "L": 53.2,
+        "a": 80.0,
+        "b": 67.0
+      },
+      "semantic_context": "System outage, security incident, major customer issue"
+    },
+    {
+      "id": "executive_strategic",
+      "label": "Executive Strategic Meeting",
+      "description": "High priority, collaborative, scheduled well in advance",
+      "latent": "#9966CC",
+      "decoded_lab": {
+        "L": 50.0,
+        "a": 35.0,
+        "b": -45.0
+      },
+      "semantic_context": "Board meeting, executive offsite, major stakeholder alignment"
+    }
+  ],
+
+  "quality_config": {
+    "min_confidence": 0.75,
+    "warning_threshold": 0.65,
+    "notes": "Moderate thresholds - meeting scheduling can tolerate some uncertainty but should flag edge cases"
+  },
+
+  "confidence_factors": {
+    "transform_quality_weight": 0.30,
+    "schema_coverage_weight": 0.35,
+    "anchor_proximity_weight": 0.35,
+    "notes": "Balanced weighting appropriate for business process automation"
+  },
+
+  "audit_mode": true,
+  "compliance_notes": "Enable audit trails for calendar systems to track meeting prioritization decisions and scheduling conflicts.",
+
+  "usage_guidelines": {
+    "target_use_cases": [
+      "Smart calendar prioritization",
+      "Meeting request triage",
+      "Scheduling conflict resolution",
+      "Notification urgency levels",
+      "Calendar assistant automation",
+      "Meeting room allocation"
+    ],
+    "not_suitable_for": [
+      "Legal/compliance-mandated meetings (use explicit flags)",
+      "External customer meetings (may need separate schema)",
+      "Time zone coordination (use structured datetime data)"
+    ],
+    "integration_notes": "Combine with calendar metadata (attendee count, duration, recurrence) for complete scheduling intelligence."
+  },
+
+  "scheduling_logic": {
+    "conflict_resolution": "Higher priority_level wins. If tied, higher urgency_score wins. If still tied, prefer earlier scheduled.",
+    "notification_urgency": "urgency_score > 50: immediate notification. 0-50: batched digest. < 0: no notification.",
+    "reschedule_flexibility": "urgency_score < -30: highly flexible. -30 to 30: moderate flexibility. > 30: avoid rescheduling.",
+    "buffer_time": "priority_level > 70: add 15min buffer before/after. < 30: no buffer needed."
+  },
+
+  "example_interpretations": [
+    {
+      "latent": "#FF0000",
+      "priority_level": 95,
+      "urgency_score": 90,
+      "collaboration_scope": 75,
+      "description": "Critical crisis requiring immediate all-hands response",
+      "action": "Override all conflicts, send immediate notifications, block calendar"
+    },
+    {
+      "latent": "#6699CC",
+      "priority_level": 75,
+      "urgency_score": -20,
+      "collaboration_scope": -35,
+      "description": "Important planning session, flexible scheduling, moderate collaboration",
+      "action": "Schedule in advance, protect time but allow reschedule with notice"
+    },
+    {
+      "latent": "#808080",
+      "priority_level": 50,
+      "urgency_score": 0,
+      "collaboration_scope": 0,
+      "description": "Routine check-in with neutral priority and flexibility",
+      "action": "Standard scheduling, can be moved if conflicts arise"
+    }
+  ],
+
+  "integration_examples": {
+    "calendar_api": {
+      "description": "Map VRGB priority to calendar event properties",
+      "mapping": {
+        "priority_level > 80": "event.priority = 'high', event.showAsBusy = true",
+        "priority_level 50-80": "event.priority = 'medium', event.showAsBusy = true",
+        "priority_level < 50": "event.priority = 'low', event.showAsBusy = false"
+      }
+    },
+    "notification_service": {
+      "description": "Route notifications based on urgency",
+      "mapping": {
+        "urgency_score > 70": "SMS + email + push notification",
+        "urgency_score 30-70": "Email + push notification",
+        "urgency_score 0-30": "Email only",
+        "urgency_score < 0": "Digest/no notification"
+      }
+    }
+  },
+
+  "version_history": [
+    {
+      "version": "v1.0",
+      "date": "2024-02-10",
+      "changes": "Initial schema with 3 anchors for basic urgency"
+    },
+    {
+      "version": "v2.0",
+      "date": "2024-08-22",
+      "changes": "Added collaboration scope dimension, expanded to 5 anchors"
+    },
+    {
+      "version": "v2.2",
+      "date": "2025-11-21",
+      "changes": "Added executive and crisis anchors, refined scheduling logic, enhanced integration examples"
+    }
+  ],
+
+  "metadata": {
+    "author": "Nicholas Cottrell",
+    "organization": "VRGB Research",
+    "domain_experts_consulted": ["Calendar platform engineers", "Executive assistants", "Productivity researchers"],
+    "validation_status": "Example schema - illustrative purposes",
+    "license": "Apache-2.0"
+  }
+}

@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use VRGB in your research, please cite it as below."
+title: "VRGB: Stable Latent Coordinates for Semantic Preference Encoding"
+version: 2.6
+date-released: 2025-11-21
+authors:
+  - family-names: Cottrell
+    given-names: Nicholas
+    orcid: https://orcid.org/0000-0000-0000-0000
+repository-code: "https://github.com/nickcottrell/vrgb-spec"
+url: "https://github.com/nickcottrell/vrgb-spec"
+abstract: >
+  VRGB is a system for encoding preferences as fixed 3-dimensional color
+  coordinates while externalizing semantics into versioned schemas. It
+  follows the same architectural separation used by latent diffusion models:
+  a stable latent space, a mutable family of interpreters, and quality metrics
+  over interpretations. Unlike image diffusion, VRGB is deterministic, does
+  not perform stochastic denoising, and does not learn its latent geometry.
+  Instead, it adopts established colorspaces (RGB, HSL, LAB, etc.) as
+  low-dimensional coordinate systems and treats schemas as explicit,
+  human-authored mappings from color coordinates to domain-specific parameters.
+keywords:
+  - latent spaces
+  - semantic encoding
+  - colorspace geometry
+  - interpretable AI
+  - preference systems
+  - versioned schemas
+  - stable diffusion pattern
+  - auditable systems
+license: Apache-2.0
+type: software

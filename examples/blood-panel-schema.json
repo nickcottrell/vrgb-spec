@@ -1,0 +1,166 @@
+{
+  "domain": "blood_panel_analysis",
+  "lineage_id": "blood_panel_lab",
+  "schema_version": "v2.6",
+  "created": "2025-11-21",
+  "description": "Clinical blood panel analysis with severity, urgency, and temporal relevance axes. Uses LAB colorspace for perceptually uniform severity metrics.",
+  "schema_hash": "sha256-f8e7d6c5b4a3928170695847362514039281726354abcdef0123456789fedcba",
+
+  "transform": {
+    "colorspace": "lab",
+    "reference_white": "D65",
+    "adaptation": "Bradford",
+    "gamma": "sRGB",
+    "clipping_policy": "perceptual_clamp",
+    "notes": "LAB provides perceptually uniform distances suitable for clinical severity metrics"
+  },
+
+  "dimensions": {
+    "L": {
+      "param": "clinical_severity",
+      "label": "Clinical Severity",
+      "range": [0, 100],
+      "description": "Overall clinical concern level from routine (0) to critical (100)",
+      "interpretation": "Higher values indicate greater medical concern requiring attention"
+    },
+    "a": {
+      "param": "urgency_level",
+      "label": "Urgency Level",
+      "range": [-128, 127],
+      "description": "Time-sensitivity axis from routine monitoring (negative) to immediate action (positive)",
+      "interpretation": "Negative values: routine/scheduled. Positive values: time-sensitive/urgent."
+    },
+    "b": {
+      "param": "temporal_relevance",
+      "label": "Temporal Relevance",
+      "range": [-128, 127],
+      "description": "Historical baseline (negative) vs acute change/trending (positive)",
+      "interpretation": "Negative: stable baseline. Positive: acute change or concerning trend."
+    }
+  },
+
+  "anchors": [
+    {
+      "id": "routine_screening",
+      "label": "Routine Annual Screening",
+      "description": "Normal preventive care with no immediate concerns",
+      "latent": "#707070",
+      "decoded_lab": {
+        "L": 46.5,
+        "a": 0.0,
+        "b": 0.0
+      },
+      "semantic_context": "Annual physical, wellness check, no red flags"
+    },
+    {
+      "id": "monitoring_stable",
+      "label": "Chronic Condition Monitoring (Stable)",
+      "description": "Existing condition with stable baseline, routine follow-up",
+      "latent": "#90A080",
+      "decoded_lab": {
+        "L": 62.0,
+        "a": -15.0,
+        "b": 18.0
+      },
+      "semantic_context": "Diabetes monitoring, hypertension check, stable readings"
+    },
+    {
+      "id": "monitoring_concern",
+      "label": "Chronic Condition with Emerging Concern",
+      "description": "Known condition with values trending outside normal range",
+      "latent": "#B88040",
+      "decoded_lab": {
+        "L": 55.0,
+        "a": 20.0,
+        "b": 40.0
+      },
+      "semantic_context": "Elevated glucose trend, rising cholesterol, needs attention"
+    },
+    {
+      "id": "moderate_concern",
+      "label": "Moderate Clinical Concern",
+      "description": "Abnormal values requiring medical consultation within days",
+      "latent": "#DD5522",
+      "decoded_lab": {
+        "L": 52.0,
+        "a": 58.0,
+        "b": 52.0
+      },
+      "semantic_context": "Borderline anemia, liver enzyme elevation, schedule appointment"
+    },
+    {
+      "id": "acute_concern",
+      "label": "Acute Clinical Concern",
+      "description": "Significantly abnormal values requiring immediate medical attention",
+      "latent": "#FF3300",
+      "decoded_lab": {
+        "L": 53.0,
+        "a": 80.0,
+        "b": 67.0
+      },
+      "semantic_context": "Critical blood sugar, severe anemia, immediate doctor notification"
+    }
+  ],
+
+  "quality_config": {
+    "min_confidence": 0.85,
+    "warning_threshold": 0.75,
+    "notes": "High thresholds appropriate for medical context where low-confidence interpretations should flag for manual review"
+  },
+
+  "confidence_factors": {
+    "transform_quality_weight": 0.35,
+    "schema_coverage_weight": 0.30,
+    "anchor_proximity_weight": 0.35,
+    "notes": "Balanced weighting between transform quality, schema coverage, and proximity to known anchors"
+  },
+
+  "audit_mode": true,
+  "compliance_notes": "This schema is designed for use in HIPAA-compliant systems. All interpretations must be logged with complete audit trails including schema version and confidence scores.",
+
+  "usage_guidelines": {
+    "target_use_cases": [
+      "Blood panel result triage",
+      "Clinical urgency routing",
+      "Patient notification prioritization",
+      "Lab result flagging systems"
+    ],
+    "not_suitable_for": [
+      "Diagnostic decision-making (clinical judgment required)",
+      "Treatment selection (requires physician oversight)",
+      "Standalone clinical conclusions"
+    ],
+    "integration_notes": "VRGB interpretations should supplement, not replace, clinical judgment. Always display confidence scores to clinicians."
+  },
+
+  "version_history": [
+    {
+      "version": "v1.0",
+      "date": "2023-03-15",
+      "changes": "Initial schema with 2 anchors (routine, acute)"
+    },
+    {
+      "version": "v2.0",
+      "date": "2024-06-10",
+      "changes": "Added urgency dimension, 3 total anchors, refined ranges"
+    },
+    {
+      "version": "v2.1",
+      "date": "2024-11-05",
+      "changes": "Added temporal relevance dimension, increased to 4 anchors"
+    },
+    {
+      "version": "v2.6",
+      "date": "2025-11-21",
+      "changes": "Final production schema with 5 anchors, comprehensive coverage, Merkle-style hashing support, enhanced documentation"
+    }
+  ],
+
+  "metadata": {
+    "author": "Nicholas Cottrell",
+    "organization": "VRGB Research",
+    "domain_experts_consulted": ["Clinical informaticists", "Laboratory medicine specialists"],
+    "validation_status": "Example schema - not clinically validated",
+    "license": "Apache-2.0"
+  }
+}
