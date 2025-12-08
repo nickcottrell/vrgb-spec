@@ -128,11 +128,6 @@ vrgb-spec/
 └── assets/                            # Diagrams and visual aids
 ```
 
-## Author
-
-**Nicholas Cottrell**
-AI-native cloud architect, former lead designer of AltspaceVR
-
 ## Citation
 
 If you reference VRGB in academic work, please cite:
