@@ -7,7 +7,7 @@
 
 ## Overview
 
-VRGB borrows the architectural pattern that made Stable Diffusion transformative—**separate what doesn't change from what must evolve**—and applies it to semantic preferences using colorspace geometry instead of learned latent vectors.
+Virtual RGB (VRGB) borrows the architectural pattern that made Stable Diffusion transformative—**separate what doesn't change from what must evolve**—and applies it to semantic preferences using colorspace geometry instead of learned latent vectors.
 
 ```
 Fixed 3D Colorspace Coordinate (#FF3300)
