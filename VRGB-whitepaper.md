@@ -1,7 +1,7 @@
 # VRGB: Stable Latent Coordinates for Semantic Preference Encoding
 
 **Nicholas Cottrell**
-**Version 2.6 — November 2025**
+**Version 2.7 — April 2026**
 
 ---
 
@@ -34,18 +34,32 @@
    - [8.1 Semantic Privacy Boundary](#81-semantic-privacy-boundary)
    - [8.2 Schema Hashing and Merkle-style Audit](#82-schema-hashing-and-merkle-style-audit)
    - [8.3 Interpretation Audit Record](#83-interpretation-audit-record)
-10. [Implementation Sketch](#9-implementation-sketch)
-    - [9.1 Core API Shape](#91-core-api-shape)
-    - [9.2 Schema Design Guidelines](#92-schema-design-guidelines)
-11. [Related Work](#10-related-work)
-12. [Conclusion: What Becomes Possible](#11-conclusion-what-becomes-possible)
-    - [11.1 The Pattern Is Portable](#111-the-pattern-is-portable)
-    - [11.2 Hybrid Architectures](#112-hybrid-architectures)
-    - [11.3 Beyond Preferences](#113-beyond-preferences)
-    - [11.4 The Cost of Interpretability](#114-the-cost-of-interpretability)
-    - [11.5 What We Hope You Take Away](#115-what-we-hope-you-take-away)
-13. [References](#references)
-14. [Appendix A: Complete Schema Example](#appendix-a-complete-schema-example)
+10. [Geometric Security Model](#9-geometric-security-model)
+    - [9.1 Claims](#91-claims)
+    - [9.2 Threat Model](#92-threat-model)
+    - [9.3 Accountable Privacy](#93-accountable-privacy)
+    - [9.4 Four Manifestations of Accountable Privacy](#94-four-manifestations-of-accountable-privacy)
+    - [9.5 Distributed Addressing: Why Not Tor](#95-distributed-addressing-why-not-tor)
+    - [9.6 Geometric Impossibility as Design Constraint](#96-geometric-impossibility-as-design-constraint)
+11. [Operating Doctrine](#10-operating-doctrine)
+    - [10.1 Stance](#101-stance)
+    - [10.2 Policy](#102-policy)
+    - [10.3 The Pattern](#103-the-pattern)
+    - [10.4 Audience / Not For](#104-audience--not-for)
+    - [10.5 Observers Welcome](#105-observers-welcome)
+    - [10.6 Propagation](#106-propagation)
+12. [Implementation Sketch](#11-implementation-sketch)
+    - [11.1 Core API Shape](#111-core-api-shape)
+    - [11.2 Schema Design Guidelines](#112-schema-design-guidelines)
+13. [Related Work](#12-related-work)
+14. [Conclusion: What Becomes Possible](#13-conclusion-what-becomes-possible)
+    - [13.1 The Pattern Is Portable](#131-the-pattern-is-portable)
+    - [13.2 Hybrid Architectures](#132-hybrid-architectures)
+    - [13.3 Beyond Preferences](#133-beyond-preferences)
+    - [13.4 The Cost of Interpretability](#134-the-cost-of-interpretability)
+    - [13.5 What We Hope You Take Away](#135-what-we-hope-you-take-away)
+15. [References](#references)
+16. [Appendix A: Complete Schema Example](#appendix-a-complete-schema-example)
 
 ---
 
@@ -551,9 +565,176 @@ This structure is sufficient to reconstruct the *exact* interpretation given a p
 
 ---
 
-## 9. Implementation Sketch
+## 9. Geometric Security Model
 
-### 9.1 Core API Shape
+Section 8 establishes the mechanical primitives: what is public, what is private, how schemas are hashed, how interpretations are audited. This section takes the next step. It states the security model VRGB claims to provide, defines the threat model it addresses, and argues that the resulting guarantees are *derived from geometry* rather than assigned by policy.
+
+### 9.1 Claims
+
+This section defends four claims:
+
+1. **Accountable privacy is a distinct architectural category.** It is not a weaker form of anonymity and not a stronger form of transparency. It is a first-class design primitive with its own guarantees.
+2. **Security properties are derivable from geometry, not assigned by policy.** In VRGB, the invariants that matter for security fall out of the math of the colorspace and the schema contract. They are not access control lists wrapped around a trust boundary.
+3. **VRGB is a privacy primitive, not a display system.** Color rendering is one application of colorspace-as-substrate. Preference addressing, conformance proofs, and distributed identifiers are others. The substrate is load-bearing for privacy even when nothing on a screen changes color.
+4. **Spectral binding makes surveillance economically irrational.** Not impossible — uneconomical. A system where every address is discovered rather than assigned, and where interpretation requires the correct schema, raises the cost of undirected surveillance past the point where it pays.
+
+### 9.2 Threat Model
+
+VRGB is designed to resist:
+
+* **Centralized surveillance of preference and behavior addresses.** No single authority owns the address space; no central registry can be subpoenaed or compromised to reveal who holds which coordinate.
+* **Forged or silently-rewritten interpretations.** Schemas are content-addressed (§8.2). A schema rewrite changes its hash; audit records (§8.3) pin the interpretation to a specific schema version.
+* **Schema-level semantic drift.** Because lineage and hash are recorded at interpretation time, a later change to a schema cannot retroactively alter the meaning of a prior output.
+* **Unaccountable publication.** Interpretations that affect others carry a provenance chain. A claim with no chain is recognizable as such.
+
+VRGB does **not** claim to defend against:
+
+* Anonymity from consensual disclosure. Users who publish their own coordinates are no longer private with respect to those coordinates.
+* Side-channel attacks on the execution environment (memory, cache, network timing).
+* Social-engineering attacks on schema authors or key holders.
+* Key-custody failures outside the protocol.
+
+A useful shorthand: **policy is a fence; geometry is a law of physics.** Fences can be walked around, torn down, or redefined. Geometric invariants cannot be waived by a trusted operator, because there is no trusted operator in the protocol.
+
+### 9.3 Accountable Privacy
+
+> **Accountable Privacy** — the structural separation of *content* from *identity* and *behavior* from *surveillance*, such that individuals control what is observed about them by default, but cannot use that control to evade legitimate accountability for actions that affect others.
+
+The load-bearing word is *structural*. Accountable privacy is not:
+
+* **Policy-based** (a promise by the operator to behave well), or
+* **Platform-based** (trust in a particular provider's integrity),
+
+but baked into the math of the system such that the operator cannot unilaterally revoke it, and the user cannot unilaterally escape it.
+
+The contrast with anonymity is precise:
+
+| Property | Anonymity | Accountable Privacy |
+|---|---|---|
+| Default posture | "No one can ever know." | "Observed only by default; disclosable under defined conditions." |
+| Enforcement | Path obfuscation | Cryptographic and geometric contracts |
+| Audit surface | None (by design) | Present, but consent-gated |
+| Failure mode | Exposure breaks the model | Disclosure follows the contract |
+
+Anonymity and accountable privacy are not points on a spectrum. They are different architectures with different threat models. Bad actors need **unaccountable anonymity** — a posture in which actions leave no recoverable trace. VRGB provides **accountable privacy** — a posture in which actions leave traces that only the right parties, under the right conditions, can read. The first is a shield for harm; the second is a substrate for trust.
+
+### 9.4 Four Manifestations of Accountable Privacy
+
+Accountable privacy is an abstract posture. It manifests concretely through at least four mechanisms, each of which can be composed with VRGB's colorspace substrate:
+
+1. **Cryptographic commitment without disclosure.** A user publishes a hash commitment to an action; the action's content stays sealed. If accountability is later required, the commitment proves the action cannot have been retroactively rewritten. Privacy is preserved unless behavior triggers review.
+2. **Selective disclosure via zero-knowledge proofs.** A user proves a predicate ("over 21," "paid taxes," "author of this work") without revealing the underlying data. The proof transmits exactly the accountability signal needed — no more.
+3. **Geometric conformance proofs (VRGB-native).** A user proves that a behavior sits within an accepted region of phase space without revealing its exact coordinates. *"I am operating within the green band"* is verifiable; the specific shade is not exposed. This is the VRGB-native form, and the reason the colorspace substrate matters for privacy rather than merely for display: the substrate lets the proof be a shape-membership claim rather than a value disclosure.
+4. **Consent-gated access with mandatory audit trail.** Data is encrypted to the user's key. Any access — including by the user themselves at a later date, or by law enforcement under a disclosed warrant — leaves a tamper-evident log. Privacy is the default; access is possible but never invisible. The watcher is watched.
+
+These are not mutually exclusive. A mature accountable-privacy deployment composes at least (3) and (4), and frequently all four.
+
+### 9.5 Distributed Addressing: Why Not Tor
+
+Tor is the nearest existing analogue, and the comparison is instructive.
+
+* **Onion routing** achieves privacy of *path*: no single node sees both source and destination.
+* **VRGB** achieves privacy of *identifier*: no single authority owns the address space.
+
+Both are structural rather than policy-based. Both degrade gracefully rather than failing catastrophically. The distinction is what each removes:
+
+* Tor removes the observer's ability to know *who is talking to whom*.
+* VRGB removes the system's need for a central *who* to exist at all.
+
+A VRGB address is not anonymous — it carries a cryptographic lineage through chip signatures, vault provenance, and the keeper chain. But it is not *centrally resolvable*. The address space is discovered by spectral binding, not assigned by a registry. This is accountable privacy at the identifier layer: every address has a verifiable history, and no party can top-down surveil the space.
+
+### 9.6 Geometric Impossibility as Design Constraint
+
+"Geometrically impossible misuse" is a concrete design constraint, not an aspiration. It means the misuse path does not exist in the topology of the system — not that it is forbidden by policy, and not that it is merely expensive. A policy can be waived; a cost can be paid; a geometry cannot be negotiated with.
+
+In VRGB:
+
+* Addresses are discovered via spectral binding, not assigned by a registry. There is no "issue a new address" API call, and therefore no authority to compromise for forgery.
+* Interpretation requires the correct schema. Without the schema, a hex coordinate is an uninterpretable three-tuple. Surveillance that captures raw coordinates captures nothing of semantic value.
+* Every step of the audit chain is verifiable against the geometry. No node in the protocol requires the reader to *trust* any party; every claim is checkable.
+
+The inverse posture — start with access control lists and add cryptography to protect the lists — remains the industry default. VRGB starts with a shape. The access controls that matter fall out of which operations the shape permits.
+
+---
+
+## 10. Operating Doctrine
+
+Section 9 is the contract: *what the system does, and what a researcher is entitled to rely on.* This section is the doctrine: *the stance behind the contract, the rules that follow from the stance, and the pattern other projects can fork.* Contract without doctrine is brittle under governance pressure; doctrine without contract is a press release. Both belong in the same artifact.
+
+### 10.1 Stance
+
+Privacy is not secrecy. Accountable privacy is the default posture of a system that respects both the individual and the collective. A well-designed substrate makes that posture the path of least resistance — users do not have to choose it consciously, and operators cannot unilaterally override it.
+
+Three commitments flow from the stance:
+
+1. **Transparency about architecture, privacy about content.** The system's invariants, schemas (as hashes), and audit records are public. The payloads that ride on them are not, except under the user's contract.
+2. **Legibility over endorsement.** The project publishes its current state so that oversight communities, researchers, and peers can *observe* the work without being *involved* with it. Being watched is a feature of the design, not a concession to it.
+3. **Altruistic closure of exploits.** Every closed vulnerability becomes a published lesson. Security improvements are artifacts of the commons — not because the project is generous, but because the stance requires it.
+
+### 10.2 Policy
+
+The stance becomes operational through rules such as:
+
+* No central identity registry.
+* No single point of de-anonymization.
+* Disclosure thresholds require multi-party consent, cryptographic rather than social.
+* Schemas and interpretations are content-addressed; silent rewrites are detectable by anyone, not just the project.
+* Every rule traces back to a stance commitment. Rules that do not are candidates for removal.
+
+### 10.3 The Pattern
+
+The doctrine is intended to be forkable. The reusable shape is:
+
+```
+stance → threat model → architectural constraints → cryptographic primitives → published contract
+```
+
+Each layer constrains the next, but none directly implements the layer above:
+
+* The **stance** does not execute code. It rules out classes of implementation.
+* The **threat model** does not enforce anything. It declares which attacks the contract is designed to resist.
+* The **architectural constraints** do not perform cryptography. They constrain which primitives are acceptable.
+* The **cryptographic primitives** do not declare policy. They realize the constraints at the byte level.
+* The **published contract** does not run. It states what the running system owes its observers.
+
+A project that builds this ladder, in this order, is running compatible doctrine regardless of domain.
+
+### 10.4 Audience / Not For
+
+This doctrine is for operators building verifiable-trust infrastructure — systems where users need to be *legibly private* rather than *invisibly hidden*.
+
+It is explicitly **not** for:
+
+* **Anonymity-seekers.** If the goal is "no one can ever know," the audit trail and cryptographic lineage will be in the way. That is correct by design.
+* **Performance-seekers.** The substrate prioritizes interpretability and geometric invariants over throughput. Low-latency workloads will find the contract expensive.
+* **Those seeking escape from accountability.** Actions in accountable-privacy systems remain traceable by the right parties under the right conditions. That is the whole point of the architecture.
+
+If any of the above is the user's goal, the architecture will frustrate them on purpose. This is not a defect to be engineered around in a later release.
+
+### 10.5 Observers Welcome
+
+The project is designed to be watched. Oversight communities — AI-safety organizations, alignment researchers, infrastructure peers, civil-society auditors — are invited to observe without obligation to engage. The legibility surface consists of:
+
+* The published specification (this document) and its provenance.
+* A public changelog tracking architectural decisions.
+* Tagged commits and posts for RSS-level tracking (`#vrgb-doctrine`, `#geometric-security`).
+* Open issues reflecting current threat-model assumptions and known limitations.
+
+Responses from observers are not expected. The posture is *observable under supervision*, not *seeking endorsement*.
+
+### 10.6 Propagation
+
+The doctrine is branded only incidentally. Compatibility is architectural:
+
+A project running compatible doctrine is one that (a) publishes an analogous stance, (b) derives its security properties from geometry rather than policy, (c) defines accountable privacy for its own domain, and (d) invites observation on the same terms. Label agreement is not required; architectural agreement is.
+
+The goal is propagation of the pattern — not of a term, a repository, or a name. A field of projects running compatible doctrine constitutes distributed oversight by construction. No central body has to exist; the legibility is the oversight.
+
+---
+
+## 11. Implementation Sketch
+
+### 11.1 Core API Shape
 
 A minimal Python-like interface:
 
@@ -596,7 +777,7 @@ class VRGBInterpreter:
         return sorted(dists, key=lambda x: x[1])[:k]
 ```
 
-### 9.2 Schema Design Guidelines
+### 11.2 Schema Design Guidelines
 
 To keep VRGB interpretable and stable:
 
@@ -610,7 +791,7 @@ To keep VRGB interpretable and stable:
 
 ---
 
-## 10. Related Work
+## 12. Related Work
 
 **Latent diffusion models [Rombach et al., 2022]** separate learned latent spaces from generative decoders. VRGB borrows the architectural pattern (stable latents, mutable models, quality metrics) but uses hand-designed geometric spaces rather than learned representations.
 
@@ -622,9 +803,9 @@ To keep VRGB interpretable and stable:
 
 ---
 
-## 11. Conclusion: What Becomes Possible
+## 13. Conclusion: What Becomes Possible
 
-### 11.1 The Pattern Is Portable
+### 13.1 The Pattern Is Portable
 
 VRGB demonstrates that the stable latent / mutable interpretation pattern works beyond learned representations. This suggests a broader principle: **when natural geometric structures exist, they are candidates for latent spaces**, rather than defaulting to learned embeddings.
 
@@ -636,7 +817,7 @@ Many semantic domains have intuitive low-dimensional structures:
 
 Each of these could be encoded in 3D coordinate systems, interpreted through versioned schemas, and evolved without data migration. The question is not whether the geometry is perfect, but whether it is *useful enough* that the interpretability gains outweigh the capacity constraints.
 
-### 11.2 Hybrid Architectures
+### 13.2 Hybrid Architectures
 
 VRGB need not replace high-dimensional embeddings. It can complement them:
 
@@ -662,7 +843,7 @@ Convert back to embedding for execution
 
 The geometric interpretability of VRGB makes it useful as an interface layer even when more powerful representations exist underneath.
 
-### 11.3 Beyond Preferences
+### 13.3 Beyond Preferences
 
 The pattern applies wherever:
 - **Semantics must evolve** faster than data can migrate
@@ -676,13 +857,13 @@ Potential applications:
 - **Recommendation systems**: User taste profiles as traversable geometric spaces
 - **Routing and orchestration**: Service selection based on interpretable multi-dimensional preferences
 
-### 11.4 The Cost of Interpretability
+### 13.4 The Cost of Interpretability
 
 VRGB's 24-bit capacity is a real constraint. It cannot encode rich semantic nuance. It cannot replace transformers for language understanding or ViT for vision. It will never be the right tool for learned, emergent representations.
 
 But for stable, coarse-grained semantic categories—the kind that humans think about and discuss explicitly—geometric structure may be enough. And when it is, the gains in interpretability, auditability, and governance may justify the capacity trade-off.
 
-### 11.5 What We Hope You Take Away
+### 13.5 What We Hope You Take Away
 
 If you remember one thing from this paper, let it be this: **the stable diffusion pattern is not about images or noise schedules. It's about separating what changes from what doesn't.**
 

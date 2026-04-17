@@ -5,6 +5,22 @@ All notable changes to the VRGB specification will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7] - 2026-04-17
+
+### Added
+
+- §9 **Geometric Security Model**: four assertive claims (accountable privacy as distinct category; geometric-derivable security; VRGB as privacy primitive; spectral binding as economic deterrent), explicit threat model, accountable-privacy definition, four manifestation patterns (cryptographic commitment, ZK proofs, geometric conformance, consent-gated audit), Tor comparison, geometric-impossibility design constraint.
+- §10 **Operating Doctrine**: stance, policy, the forkable pattern (stance → threat model → architectural constraints → cryptographic primitives → published contract), audience / not-for clause, observers-welcome clause, propagation doctrine.
+
+### Changed
+
+- Renumbered downstream sections: Implementation Sketch (was §9, now §11), Related Work (was §10, now §12), Conclusion (was §11, now §13). Subsection numbering updated accordingly.
+- Table of contents updated to reflect new sections and renumbered anchors.
+
+### Rationale
+
+Previously, the security stance and operating doctrine lived in separate vault entries and planning notes. Folding them into the canonical whitepaper creates a single provenance chain: anyone reading the technical spec now sees the security model and doctrine backing it, and cannot quote the doctrine without the math that supports it.
+
 ## [2.6] - 2025-11-21
 
 ### Added
