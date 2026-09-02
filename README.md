@@ -129,6 +129,152 @@ vrgb-spec/
 └── assets/                            # Diagrams and visual aids
 ```
 
+## Development Setup
+
+VRGB is a specification-first repository: you contribute by improving schemas, examples, and documentation.
+
+### Prerequisites
+
+- **Git** for cloning and submitting pull requests
+- **Python 3.10+** if you want to run the JSON loading/snippet checks shown in docs
+- A **JSON-aware editor** (VS Code, Cursor, or equivalent) for schema authoring
+
+### Clone and open locally
+
+```bash
+git clone https://github.com/nickcottrell/vrgb-spec.git
+cd vrgb-spec
+```
+
+There are no package dependencies to install for core contribution work in this repository.
+
+### Validate your changes locally
+
+- Ensure edited JSON files parse cleanly
+- Compare your schema against the structure in [examples/README.md](examples/README.md)
+- Re-check anchor coverage and confidence thresholds before opening a PR
+
+### Editor and tooling recommendations
+
+- **VS Code + JSON language support** for schema editing and quick syntax feedback
+- **Markdown preview** for documentation changes
+- Optional CLI helpers for quick checks:
+  - `python -m json.tool <file>`
+  - `jq . <file>` (if installed)
+
+## Your First Schema (Step-by-Step)
+
+Use the blood panel example as a starting point so you follow established VRGB conventions.
+
+### 1. Copy an existing example
+
+```bash
+cp examples/blood-panel-schema.json examples/my-first-schema.json
+```
+
+### 2. Update identity fields
+
+Edit these fields first:
+
+- `domain` (what the schema is for)
+- `lineage_id` (transform family identifier)
+- `schema_version` (semantic version)
+- `description` (clear, domain-specific intent)
+
+### 3. Define your dimensions
+
+Map each transform axis to a stable semantic parameter:
+
+```json
+"dimensions": {
+  "L": {
+    "param": "clinical_severity",
+    "label": "Clinical Severity",
+    "range": [0, 100]
+  },
+  "a": {
+    "param": "urgency_level",
+    "label": "Urgency Level",
+    "range": [-128, 127]
+  },
+  "b": {
+    "param": "temporal_relevance",
+    "label": "Temporal Relevance",
+    "range": [-128, 127]
+  }
+}
+```
+
+### 4. Add anchors that cover meaningful regions
+
+Start with 4-6 anchors that represent low/mid/high semantics and key boundaries:
+
+```json
+"anchors": [
+  {
+    "id": "routine_screening",
+    "latent": "#707070",
+    "label": "Routine Annual Screening"
+  },
+  {
+    "id": "acute_concern",
+    "latent": "#FF3300",
+    "label": "Acute Clinical Concern"
+  }
+]
+```
+
+### 5. Validate syntax and required keys
+
+```bash
+python -m json.tool examples/my-first-schema.json >/dev/null
+```
+
+```python
+import json
+
+required = ["domain", "lineage_id", "schema_version", "transform", "dimensions", "anchors", "quality_config"]
+with open("examples/my-first-schema.json", "r", encoding="utf-8") as f:
+    schema = json.load(f)
+
+missing = [k for k in required if k not in schema]
+if missing:
+    raise ValueError(f"Missing required keys: {missing}")
+
+print("Schema shape check passed.")
+```
+
+### 6. Test the schema qualitatively
+
+- Review whether anchors reflect real semantic boundaries in your domain
+- Confirm ranges match the transform you selected
+- Ensure `quality_config.min_confidence` fits domain risk (higher for safety-critical domains)
+- Compare with [examples/blood-panel-schema.json](examples/blood-panel-schema.json) and [examples/recipe-recommendation-schema.json](examples/recipe-recommendation-schema.json)
+
+## Local Testing
+
+This repository does not include a dedicated automated test runner. Local testing is schema and documentation focused.
+
+### Common contributor commands
+
+```bash
+# Validate a single schema file
+python -m json.tool examples/blood-panel-schema.json >/dev/null
+
+# Validate all example schemas
+for f in examples/*.json; do python -m json.tool "$f" >/dev/null; done
+
+# Check repository status before committing
+git --no-pager status --short
+```
+
+### What to verify before opening a PR
+
+- JSON is valid and consistently formatted
+- `dimensions` ranges align with the declared colorspace
+- Anchor set is not sparse for the intended confidence thresholds
+- Documentation links and examples still resolve correctly
+
 ## Related Projects
 
 Reference implementations and tooling that build on this specification:
@@ -167,7 +313,67 @@ This repository contains the formal specification for VRGB. For discussion of:
 - **Implementation questions** — Open an issue with the `implementation` label
 - **Schema design patterns** — Share in discussions or submit example PRs
 
-Reference implementations and tooling will be developed in separate repositories.
+### How to contribute
+
+We welcome contributions in three main areas:
+
+1. **Schemas and examples** — Add new domain schemas under `examples/` or improve anchor coverage, confidence tuning, and documentation in existing examples.
+2. **Specification and docs** — Clarify architecture, add design guidance, and improve onboarding content in `README.md` and `docs/`.
+3. **Ecosystem alignment** — Improve references to implementation repositories (for example, `vrgb-kafka`) so patterns remain consistent between spec and practice.
+
+### Good first contributions
+
+- Add a new example schema for a clearly bounded domain
+- Improve explanatory notes for one existing example in `examples/README.md`
+- Add FAQ entries for schema evolution, lineage, or confidence tuning edge cases
+- Fix unclear wording or broken links in docs
+
+### Pull request checklist
+
+Before submitting, confirm:
+
+- [ ] Your change is scoped and clearly documented
+- [ ] Any new/edited JSON schema parses successfully
+- [ ] You explained domain rationale (dimensions, anchors, thresholds)
+- [ ] Related docs were updated when behavior/meaning changed
+- [ ] Commit and PR messages describe *why* the change is needed
+
+If you are unsure about schema design tradeoffs, open a discussion or draft PR early.
+
+### Code of conduct
+
+Please follow the standards in [GitHub Community Guidelines](https://docs.github.com/en/site-policy/github-terms/github-community-guidelines). If this repository adopts a dedicated `CODE_OF_CONDUCT.md`, follow that document as the project-specific source of truth.
+
+Reference implementations and tooling are developed in separate repositories.
+
+## Troubleshooting
+
+### JSON parse errors
+
+- Run `python -m json.tool <file>` to find structural issues
+- Watch for trailing commas, unmatched braces, or invalid quote usage
+
+### Unsure which colorspace to use
+
+- Use **LAB** for continuous severity/urgency style scoring
+- Use **HSL** for category + intensity style mappings
+- Use **RGB** for largely independent orthogonal axes
+
+See [examples/README.md](examples/README.md) for pattern guidance.
+
+### Low confidence in large regions
+
+Low confidence usually means anchor coverage is too sparse. Add anchors at:
+
+- semantic extremes
+- decision boundaries
+- common real-world cases
+
+### Lineage/version confusion
+
+- Keep the same `lineage_id` when refining semantics within the same transform family
+- Start a new lineage if you change transform strategy (for example, HSL → LAB)
+- Increment `schema_version` whenever interpretation semantics change
 
 ## Related Work
 
