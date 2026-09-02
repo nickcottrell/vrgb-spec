@@ -1,0 +1,183 @@
+{
+  "domain": "kafka_event_routing",
+  "lineage_id": "event_routing_rgb",
+  "schema_version": "v1.0",
+  "created": "2026-09-02",
+  "description": "Semantic event routing for Kafka message streams. Tags events with a fixed-size color coordinate carried in a message header, so consumers can filter on channel-routing logic without deserializing the payload.",
+  "schema_hash": "sha256-1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
+
+  "transform": {
+    "colorspace": "rgb",
+    "reference_white": "D65",
+    "adaptation": "none",
+    "gamma": "sRGB",
+    "clipping_policy": "hard_clip",
+    "notes": "RGB is used directly (not perceptually transformed) because routing decisions operate on raw channel thresholds and byte comparisons, not perceptual distance."
+  },
+
+  "dimensions": {
+    "R": {
+      "param": "urgency_channel",
+      "label": "Urgency / Priority",
+      "range": [0, 255],
+      "description": "High values indicate urgent or priority events requiring immediate processing.",
+      "interpretation": "R >= 200: urgent/priority. Lower values: normal or background priority."
+    },
+    "G": {
+      "param": "success_channel",
+      "label": "Success / Normal Operation",
+      "range": [0, 255],
+      "description": "High values indicate successful or normal-path events.",
+      "interpretation": "G >= 200 with low R/B: success or steady-state event."
+    },
+    "B": {
+      "param": "informational_channel",
+      "label": "Info / Analytics",
+      "range": [0, 255],
+      "description": "High values indicate informational, analytics, or observability events.",
+      "interpretation": "B >= 200 with low R/G: informational/analytics event."
+    }
+  },
+
+  "anchors": [
+    {
+      "id": "red_channel",
+      "label": "Urgent / Priority",
+      "description": "Time-critical events requiring immediate consumer attention",
+      "latent": "#FF0000",
+      "decoded_rgb": { "R": 255, "G": 0, "B": 0 },
+      "semantic_context": "Alerting, incident response, priority inference requests"
+    },
+    {
+      "id": "orange_channel",
+      "label": "Warning",
+      "description": "Degraded or at-risk conditions that are not yet critical",
+      "latent": "#FFA500",
+      "decoded_rgb": { "R": 255, "G": 165, "B": 0 },
+      "semantic_context": "Retry exhaustion warnings, threshold breaches, elevated latency"
+    },
+    {
+      "id": "green_channel",
+      "label": "Success / Normal",
+      "description": "Standard, successful event flow",
+      "latent": "#00FF00",
+      "decoded_rgb": { "R": 0, "G": 255, "B": 0 },
+      "semantic_context": "Completed transactions, healthy heartbeats, normal telemetry"
+    },
+    {
+      "id": "blue_channel",
+      "label": "Info / Analytics",
+      "description": "Low-priority observability and analytics events",
+      "latent": "#0000FF",
+      "decoded_rgb": { "R": 0, "G": 0, "B": 255 },
+      "semantic_context": "Metrics, logs, usage analytics, audit trails"
+    },
+    {
+      "id": "gray_channel",
+      "label": "Batch / Background",
+      "description": "Deferrable, background, or bulk-processing events",
+      "latent": "#808080",
+      "decoded_rgb": { "R": 128, "G": 128, "B": 128 },
+      "semantic_context": "Batch jobs, backfills, scheduled reports"
+    }
+  ],
+
+  "quality_config": {
+    "min_confidence": 0.60,
+    "warning_threshold": 0.50,
+    "notes": "Routing is threshold-based rather than proximity-based; confidence reflects channel separation margin rather than perceptual distance."
+  },
+
+  "confidence_factors": {
+    "transform_quality_weight": 0.20,
+    "schema_coverage_weight": 0.30,
+    "anchor_proximity_weight": 0.50,
+    "notes": "Weighted toward anchor proximity since routing decisions are effectively nearest-anchor channel classification."
+  },
+
+  "audit_mode": false,
+  "compliance_notes": "Not intended for regulated domains; routing decisions here are infrastructure-level and do not require the audit guarantees used in medical or financial schemas.",
+
+  "usage_guidelines": {
+    "target_use_cases": [
+      "Multi-modal AI pipeline routing (e.g., route by modality/priority without parsing payload)",
+      "Large-payload streams where content-based routing is cost-prohibitive",
+      "Dynamic/ad-hoc routing rules defined by color-channel thresholds",
+      "Priority-based consumer group partitioning"
+    ],
+    "not_suitable_for": [
+      "Tiny payloads where deserialization cost is negligible",
+      "Cases where the routing key is already encoded in the topic name",
+      "Strict, latency-critical throughput requirements where even a fixed-size header adds unacceptable overhead"
+    ],
+    "integration_notes": "Carry the hex coordinate as a fixed-size Kafka message header (e.g., 'vrgb-color: #FF0000') rather than embedding it in the payload, so routing never requires payload deserialization."
+  },
+
+  "routing_logic": {
+    "warm_colors": "R > 128 and (R > G) and (R > B): routed to urgent/priority consumers",
+    "cool_colors": "B > 128 and (B > R) and (B > G): routed to informational/analytics consumers",
+    "high_priority": "R >= 200: routed ahead of queued background work",
+    "real_time": "min_confidence satisfied and R >= 150: routed to low-latency consumer group",
+    "batch_processing": "R < 100 and G < 100 and B < 100 (grayscale-like): routed to batch/background consumers",
+    "custom": "Arbitrary predicate over (R, G, B), e.g. red_channel(min=200) filters R >= 200 regardless of G/B"
+  },
+
+  "example_interpretations": [
+    {
+      "latent": "#FF0000",
+      "urgency_channel": 255,
+      "success_channel": 0,
+      "informational_channel": 0,
+      "description": "Urgent priority event",
+      "action": "Route to real-time/priority consumer group"
+    },
+    {
+      "latent": "#00FF00",
+      "urgency_channel": 0,
+      "success_channel": 255,
+      "informational_channel": 0,
+      "description": "Normal successful event",
+      "action": "Route to standard processing consumer group"
+    },
+    {
+      "latent": "#808080",
+      "urgency_channel": 128,
+      "success_channel": 128,
+      "informational_channel": 128,
+      "description": "Background/batch event",
+      "action": "Route to batch consumer group, process on schedule"
+    }
+  ],
+
+  "integration_examples": {
+    "kafka_header": {
+      "description": "Map VRGB coordinate to a Kafka message header for zero-deserialization routing",
+      "mapping": {
+        "produce": "producer.produce(topic, key=key, value=payload, headers={'vrgb-color': color_hex})",
+        "consume": "if header_color in ColorRouter.warm_colors(): process_urgent(msg)"
+      }
+    },
+    "kafka_streams": {
+      "description": "Production topology: pre-filter by header color in a Kafka Streams (Java) application before fanning out to downstream, per-channel topics",
+      "mapping": {
+        "topology": "source topic -> branch by 'vrgb-color' header -> per-channel topics -> dedicated consumers"
+      }
+    }
+  },
+
+  "version_history": [
+    {
+      "version": "v1.0",
+      "date": "2026-09-02",
+      "changes": "Initial schema for Kafka semantic event routing use case (VRGB-Kafka)"
+    }
+  ],
+
+  "metadata": {
+    "author": "Nicholas Cottrell",
+    "organization": "VRGB Research",
+    "domain_experts_consulted": ["Streaming platform engineers"],
+    "validation_status": "Example schema - illustrative purposes",
+    "license": "Apache-2.0"
+  }
+}

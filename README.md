@@ -124,9 +124,17 @@ vrgb-spec/
 │   ├── README.md                      # Example documentation
 │   ├── blood-panel-schema.json       # Medical severity example
 │   ├── recipe-recommendation-schema.json  # Dietary preferences
-│   └── meeting-urgency-schema.json   # Priority/urgency routing
+│   ├── meeting-urgency-schema.json   # Priority/urgency routing
+│   └── kafka-event-routing-schema.json # Kafka semantic event routing
 └── assets/                            # Diagrams and visual aids
 ```
+
+## Related Projects
+
+Reference implementations and tooling that build on this specification:
+
+- **[vrgb-kafka](https://github.com/nickcottrell/vrgb-kafka)** — Semantic Kafka event routing using fixed-size color headers instead of payload inspection
+- **[vrgb-benchmarks](https://github.com/nickcottrell/vrgb-benchmarks)** — Performance benchmarks for VRGB-based routing and interpretation
 
 ## Citation
 
