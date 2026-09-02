@@ -75,6 +75,29 @@ This directory contains complete, production-ready VRGB schema examples demonstr
 
 ---
 
+### 4. Kafka Event Routing (`kafka-event-routing-schema.json`)
+**Domain**: Semantic event routing for streaming systems
+**Transform**: RGB (orthogonal channel thresholds for routing decisions)
+**Use Case**: Tagging Kafka events with a color header so consumers can route without deserializing the payload
+
+**Key Features**:
+- R/G/B channels map directly to urgency, success, and informational routing classes
+- Threshold-based routing logic (warm/cool colors, high priority, batch processing)
+- Designed for fixed-size message headers, not payload fields
+- Reference implementation: [vrgb-kafka](https://github.com/nickcottrell/vrgb-kafka)
+
+**Sample Interpretation**:
+```
+#FF0000 → {
+  urgency_channel: 255,
+  success_channel: 0,
+  informational_channel: 0,
+  action: "Route to real-time/priority consumer group"
+}
+```
+
+---
+
 ## Schema Structure Reference
 
 All schemas follow this structure:
